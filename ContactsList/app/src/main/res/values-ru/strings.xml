@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Лист контактов</string>
+    <string name="start">Получить контакты</string>
+    <string name="permission_error">Ошибка доступа</string>
+    <plurals name="contact_plurals">
+        <item quantity="zero">Контакты не найдены</item>
+        <item quantity="one">%d контакт найден</item>
+        <item quantity="many">%d контактов найдено</item>
+        <item quantity="few">%d контакта найдено</item>
+    </plurals>
+</resources>
