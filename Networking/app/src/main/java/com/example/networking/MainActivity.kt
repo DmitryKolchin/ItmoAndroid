@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private var message : String? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        destroyDownloadingService()
         message = savedInstanceState?.getString(MESSAGE)
         setContentView(R.layout.activity_main)
         if (message == null){
@@ -38,6 +39,15 @@ class MainActivity : AppCompatActivity() {
         else {
             fillRecyclerView(message.toString())
         }
+    }
+    fun destroyDownloadingService(){
+        val intentDownloadImage = Intent(this, ImageDownloadingService::class.java)
+        stopService(intentDownloadImage)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        destroyDownloadingService()
     }
     private class ImageListDownload(activity: MainActivity) : AsyncTask<String, Unit, String>(){
         private val activityRef = WeakReference(activity)
@@ -61,11 +71,6 @@ class MainActivity : AppCompatActivity() {
                 activity?.fillRecyclerView(result)
         }
     }
-    fun correctSize(url: String) : String{
-        val result = (url.substringBeforeLast('/')).substringBeforeLast('/')
-        return "$result/960/1040"
-
-    }
     fun fillRecyclerView(string: String){
         message = string
         val imageList : List<Image> = Gson().fromJson(message,Array<Image>::class.java).toList()
@@ -74,7 +79,7 @@ class MainActivity : AppCompatActivity() {
             layoutManager = viewManager
             adapter = ImagesAdapter(imageList) {
                 val intent = Intent(this@MainActivity, HighResActivity::class.java)
-                intent.putExtra("url", correctSize(it.download_url))
+                intent.putExtra("url", (it.download_url))
                 startActivity(intent)
             }
         }
