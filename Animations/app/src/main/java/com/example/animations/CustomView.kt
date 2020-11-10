@@ -21,6 +21,8 @@ class CustomView @JvmOverloads constructor(
     private var xDirection : Int = 1
     private var yDirection : Int = 1
     private var mode : String = "y"
+    private var cur_anle : Float = 0f
+    private var rotationSpeed : Float = 0f
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -35,6 +37,7 @@ class CustomView @JvmOverloads constructor(
             radius = a.getDimension(R.styleable.CustomView_customCircleRadius, 100f)
             mode = a.getString(R.styleable.CustomView_mode) ?: "x"
             animSpeed = a.getFloat(R.styleable.CustomView_ballSpeed, 20f)
+            rotationSpeed = a.getFloat(R.styleable.CustomView_canvasRotationSpeed, 10f)
         } finally {
             a.recycle()
         }
@@ -63,6 +66,10 @@ class CustomView @JvmOverloads constructor(
             cy = pair.first
             yDirection = pair.second
         }
+        cur_anle+=rotationSpeed
+        cur_anle %=360
+
+        canvas?.rotate(cur_anle, measuredWidth.toFloat()/2, measuredHeight.toFloat()/2)
         invalidate()
         super.onDraw(canvas)
         val save = canvas?.save()

@@ -4,5 +4,6 @@
         <attr name="mode" format="string"/>
         <attr name="customCircleRadius" format="dimension"/>
         <attr name="ballSpeed" format="float"/>
+        <attr name="canvasRotationSpeed" format="float"/>
     </declare-styleable>
 </resources>
