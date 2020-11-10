@@ -30,6 +30,8 @@
         app:mode="y"
         app:ballSpeed="10"
         app:canvasRotationSpeed="5"
+        app:isInfinite="true"
+        app:animationDuration="1000"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -5,6 +5,7 @@ import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.View.MeasureSpec.getSize
 
@@ -23,6 +24,9 @@ class CustomView @JvmOverloads constructor(
     private var mode : String = "y"
     private var cur_anle : Float = 0f
     private var rotationSpeed : Float = 0f
+    private var isInfinite : Boolean = true;
+    private var animDuration : Float = 0f;
+    private var startAnimationTime : Long = System.currentTimeMillis()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -38,6 +42,8 @@ class CustomView @JvmOverloads constructor(
             mode = a.getString(R.styleable.CustomView_mode) ?: "x"
             animSpeed = a.getFloat(R.styleable.CustomView_ballSpeed, 20f)
             rotationSpeed = a.getFloat(R.styleable.CustomView_canvasRotationSpeed, 10f)
+            isInfinite = a.getBoolean(R.styleable.CustomView_isInfinite, true)
+            animDuration = a.getFloat(R.styleable.CustomView_animationDuration, 0f)
         } finally {
             a.recycle()
         }
@@ -55,25 +61,29 @@ class CustomView @JvmOverloads constructor(
         }
         return Pair(coordinate - animSpeed, -1)
     }
-    override fun onDraw(canvas: Canvas?) {
-        if (mode == "x") {
-            val pair = changeCoordinate(cx, xDirection, measuredWidth.toFloat())
-            cx = pair.first
-            xDirection = pair.second
-        }
-        else {
-            val pair = changeCoordinate(cy, yDirection, measuredHeight.toFloat())
-            cy = pair.first
-            yDirection = pair.second
-        }
-        cur_anle+=rotationSpeed
-        cur_anle %=360
-
+    private fun drawRectangle(canvas: Canvas?){
         canvas?.rotate(cur_anle, measuredWidth.toFloat()/2, measuredHeight.toFloat()/2)
-        invalidate()
+    }
+    override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
+        if (isInfinite || System.currentTimeMillis() - startAnimationTime <= animDuration){
+            if (mode == "x") {
+                val pair = changeCoordinate(cx, xDirection, measuredWidth.toFloat())
+                cx = pair.first
+                xDirection = pair.second
+            }
+            else {
+                val pair = changeCoordinate(cy, yDirection, measuredHeight.toFloat())
+                cy = pair.first
+                yDirection = pair.second
+            }
+            cur_anle+=rotationSpeed
+            cur_anle %=360
+        }
         val save = canvas?.save()
+        drawRectangle(canvas)
         canvas?.drawCircle(cx, cy, radius, paint)
+        invalidate()
         if (save != null) {
             canvas.restoreToCount(save)
         }
