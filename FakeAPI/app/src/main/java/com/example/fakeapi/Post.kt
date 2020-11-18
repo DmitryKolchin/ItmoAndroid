@@ -1,9 +1,4 @@
 package com.example.fakeapi
 
-class Post {
-    public var userId : Int? = null;
-    public var id : Int? = null;
-    public var title : String? = null;
-    public var body : String? = null;
-
+data class Post(var userId : Int?, var id : Int?, var title : String?, var body : String?) {
 }
