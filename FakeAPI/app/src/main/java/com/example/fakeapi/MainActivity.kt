@@ -1,30 +1,36 @@
 package com.example.fakeapi
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
+import android.opengl.Visibility
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
+
 
 class MainActivity : AppCompatActivity() {
+
+    @Database(entities = [Post::class], version = 1)
+    abstract class AppDatabase : RoomDatabase() {
+        abstract fun postsDao(): PostsDao?
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (MyApp.instance.posts.isNotEmpty()){
+        if (MyApp.instance.postsDao?.getAll()?.isNotEmpty()!!){
             fillRecyclerView()
         }
         else {
@@ -38,27 +44,40 @@ class MainActivity : AppCompatActivity() {
 
         override fun onResponse(p0: Call<Post>?, p1: Response<Post>?) {
             if (p1 != null) {
-                Toast.makeText(this@MainActivity, "Request code: " + p1.code().toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Request code: " + p1.code().toString() , Toast.LENGTH_SHORT).show()
             }
         }
     }
     inner class MyPostsListCallback : Callback<List<Post>> {
         override fun onFailure(p0: Call<List<Post>>, p1: Throwable) {
             Toast.makeText(this@MainActivity, "Oops, some troubles with connection occurred while getting a list", Toast.LENGTH_SHORT).show()
+            myRecyclerView.visibility = View.VISIBLE
+            progressBar.visibility = View.INVISIBLE
         }
         override fun onResponse(p0: Call<List<Post>>, p1: Response<List<Post>>) {
             Log.i("DownloadInfo", "ListDownloaded")
-            MyApp.instance.posts = p1.body()
+            val posts = p1.body()
+            if (posts != null) {
+                MyApp.instance.clearDatabase()
+                for (post in posts){
+                    MyApp.instance.postsDao?.insertPost(post)
+                }
+            }
             fillRecyclerView()
         }
     }
     fun fillRecyclerView(){
         myRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = PostsAdapter(MyApp.instance.posts) {
-                MyApp.instance.APIService.deletePost(it.id.toString()).enqueue(MyPostCallback())
+            adapter = MyApp.instance.postsDao?.getAll()?.let {
+                PostsAdapter(it) {
+                    MyApp.instance.APIService.deletePost(it.id.toString()).enqueue(MyPostCallback())
+                    MyApp.instance.postsDao?.deletePost(it)
+                    fillRecyclerView()
+                }
             }
         }
+        myRecyclerView.visibility = View.VISIBLE
         progressBar.visibility = View.INVISIBLE
 
     }
@@ -66,6 +85,16 @@ class MainActivity : AppCompatActivity() {
         if (view is Button){
             var post = Post(2, 2, "2", "2")
             MyApp.instance.APIService.createPost(post).enqueue(MyPostCallback())
+            MyApp.instance.postsDao?.insertPost(post);
+            fillRecyclerView()
         }
+    }
+    fun onReloadClickEvent(view: View){
+        myRecyclerView.visibility = View.INVISIBLE
+        progressBar.visibility = View.VISIBLE
+        MyApp.instance.APIService.loadPosts().enqueue(MyPostsListCallback())
+
+
+
     }
 }

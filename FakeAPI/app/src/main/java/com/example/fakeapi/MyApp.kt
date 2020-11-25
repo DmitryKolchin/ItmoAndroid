@@ -1,21 +1,11 @@
 package com.example.fakeapi
 
 import android.app.Application
-import android.content.Context
-import android.util.Log
-import android.view.View
-import android.view.ViewManager
-import android.widget.ProgressBar
-import android.widget.Toast
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.activity_main.*
-import okhttp3.internal.Internal.instance
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import androidx.room.Room
+import com.example.fakeapi.MainActivity.AppDatabase
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+
 
 class MyApp() : Application() {
     private val BASE_URL = "https://jsonplaceholder.typicode.com"
@@ -25,7 +15,10 @@ class MyApp() : Application() {
     }
     lateinit var retrofit : Retrofit
     lateinit var APIService : FakeAPIService
-    var posts : List<Post> = listOf()
+    var database: AppDatabase? = null
+    var postsDao : PostsDao? = null
+
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -34,6 +27,18 @@ class MyApp() : Application() {
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
         APIService = retrofit.create(FakeAPIService::class.java)
+        database = Room.databaseBuilder(this, AppDatabase::class.java, "posts-database").allowMainThreadQueries()
+            .build()
+        postsDao = database?.postsDao()
+
+    }
+    fun clearDatabase(){
+        val posts = postsDao?.getAll()
+        if (posts != null){
+            for (post in posts){
+                postsDao?.deletePost(post)
+            }
+        }
     }
 
 }
