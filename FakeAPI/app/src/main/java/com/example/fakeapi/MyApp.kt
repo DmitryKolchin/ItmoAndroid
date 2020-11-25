@@ -17,6 +17,7 @@ class MyApp() : Application() {
     lateinit var APIService : FakeAPIService
     var database: AppDatabase? = null
     var postsDao : PostsDao? = null
+    var post : Post? = null;
 
 
     override fun onCreate() {

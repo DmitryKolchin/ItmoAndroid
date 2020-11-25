@@ -2,4 +2,9 @@
     <string name="app_name">FakeAPI</string>
     <string name="create_post">Add</string>
     <string name="update_list">Update</string>
+    <string name="post_id">Post ID:</string>
+    <string name="user_id">User ID:</string>
+    <string name="post_title">Post Title:</string>
+    <string name="post_body">Post Body:</string>
+    <string name="back">Back</string>
 </resources>

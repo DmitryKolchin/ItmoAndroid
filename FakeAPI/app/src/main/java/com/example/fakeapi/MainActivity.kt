@@ -1,16 +1,13 @@
 package com.example.fakeapi
 
-import android.content.Context
-import android.opengl.Visibility
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
@@ -29,6 +26,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val arguments = intent.extras
+        if (arguments != null && !arguments.isEmpty){
+            MyApp.instance.post?.let { addPost(it) }
+        }
 
         if (MyApp.instance.postsDao?.getAll()?.isNotEmpty()!!){
             fillRecyclerView()
@@ -59,7 +60,7 @@ class MainActivity : AppCompatActivity() {
             val posts = p1.body()
             if (posts != null) {
                 MyApp.instance.clearDatabase()
-                for (post in posts){
+                for (post in posts) {
                     MyApp.instance.postsDao?.insertPost(post)
                 }
             }
@@ -82,12 +83,14 @@ class MainActivity : AppCompatActivity() {
 
     }
     fun onAddClickEvent(view: View){
-        if (view is Button){
-            var post = Post(2, 2, "2", "2")
-            MyApp.instance.APIService.createPost(post).enqueue(MyPostCallback())
-            MyApp.instance.postsDao?.insertPost(post);
-            fillRecyclerView()
-        }
+        Log.i("sas", "asa")
+        val intent = Intent(this@MainActivity, AddPostActivity::class.java)
+        startActivity(intent)
+    }
+    private fun addPost(post : Post){
+        MyApp.instance.APIService.createPost(post).enqueue(MyPostCallback())
+        MyApp.instance.postsDao?.insertPost(post);
+        fillRecyclerView()
     }
     fun onReloadClickEvent(view: View){
         myRecyclerView.visibility = View.INVISIBLE
