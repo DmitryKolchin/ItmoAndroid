@@ -25,6 +25,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     lateinit var posts: List<Post>
+    private  var downloadTask : GetAllPostsAsync? = null
+    private  var deleteTask : DoAsync? = null
+    private  var addTask : DoAsync? = null
+    private  var refreshTask : DoAsync? =  null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -32,7 +36,8 @@ class MainActivity : AppCompatActivity() {
         if (arguments != null && !arguments.isEmpty){
             MyApp.instance.post?.let { addPost(it) }
         }
-        GetAllPostsAsync()
+        downloadTask?.cancel(true)
+        downloadTask = GetAllPostsAsync()
     }
     private inner class DoAsync(private val handler: () -> Unit) : AsyncTask<Unit, Unit, Unit>() {
         init {
@@ -90,18 +95,21 @@ class MainActivity : AppCompatActivity() {
         override fun onResponse(p0: Call<List<Post>>, p1: Response<List<Post>>) {
             Log.i("DownloadInfo", "ListDownloaded")
             val downloadedPosts = p1.body()
-            if (posts != null) {
-                DoAsync {
+            if (downloadedPosts != null) {
+                posts = downloadedPosts
+                refreshTask?.cancel(true)
+                refreshTask = DoAsync {
                     MyApp.instance.clearDatabase()
                 }
-                for (post in downloadedPosts) {
-                    DoAsync{
-                        MyApp.instance.postsDao?.insertPost(post)
-                    }
-
+                addTask?.cancel(true)
+                addTask = DoAsync {
+                    for (post in downloadedPosts) {
+                            MyApp.instance.postsDao?.insertPost(post)
+                        }
                 }
+                GetAllPostsAsync()
             }
-            GetAllPostsAsync()
+
         }
     }
     fun fillRecyclerView(){
@@ -109,6 +117,8 @@ class MainActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = PostsAdapter(posts) {
                 MyApp.instance.APIService.deletePost(it.id.toString()).enqueue(MyPostCallback())
+                deleteTask?.cancel(true)
+                deleteTask =
                 DoAsync {
                     MyApp.instance.postsDao?.deletePost(it)
                 }
@@ -126,7 +136,8 @@ class MainActivity : AppCompatActivity() {
     }
     private fun addPost(post : Post){
         MyApp.instance.APIService.createPost(post).enqueue(MyPostCallback())
-        DoAsync {
+        addTask?.cancel(true)
+        addTask = DoAsync {
             MyApp.instance.postsDao?.insertPost(post);
         }
     }
@@ -134,9 +145,17 @@ class MainActivity : AppCompatActivity() {
         myRecyclerView.visibility = View.INVISIBLE
         progressBar.visibility = View.VISIBLE
         MyApp.instance.APIService.loadPosts().enqueue(MyPostsListCallback())
-        GetAllPostsAsync()
+        downloadTask?.cancel(true)
+        downloadTask = GetAllPostsAsync()
+    }
 
-
-
+    override fun onDestroy() {
+        if (downloadTask != null){
+            downloadTask!!.cancel(true);
+4        }
+        addTask?.cancel(true)
+        deleteTask?.cancel(true)
+        refreshTask?.cancel(true)
+        super.onDestroy()
     }
 }
