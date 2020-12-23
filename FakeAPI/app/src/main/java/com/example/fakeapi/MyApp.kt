@@ -1,6 +1,7 @@
 package com.example.fakeapi
 
 import android.app.Application
+import android.os.AsyncTask
 import androidx.room.Room
 import com.example.fakeapi.MainActivity.AppDatabase
 import retrofit2.Retrofit
@@ -18,8 +19,6 @@ class MyApp() : Application() {
     var database: AppDatabase? = null
     var postsDao : PostsDao? = null
     var post : Post? = null;
-
-
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -28,10 +27,8 @@ class MyApp() : Application() {
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
         APIService = retrofit.create(FakeAPIService::class.java)
-        database = Room.databaseBuilder(this, AppDatabase::class.java, "posts-database").allowMainThreadQueries()
-            .build()
+        database = Room.databaseBuilder(this@MyApp, AppDatabase::class.java, "posts-database").build()
         postsDao = database?.postsDao()
-
     }
     fun clearDatabase(){
         val posts = postsDao?.getAll()
